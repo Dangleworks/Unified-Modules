@@ -1,12 +1,12 @@
 -- Debug Library
-debug = {}
+debugutils = {}
 
-debug.DumpTable = function (O)
+debugutils.DumpTable = function (O)
     if type(O) == 'table' then
         local s = '{ '
         for k,v in pairs(O) do
                 if type(k) ~= 'number' then k = '"'..k..'"' end
-                s = s .. '['..k..'] = ' .. debug.DumpTable(v) .. ','
+                s = s .. '['..k..'] = ' .. debugutils.DumpTable(v) .. ','
         end
         return s .. '} '
     else
@@ -14,10 +14,10 @@ debug.DumpTable = function (O)
     end
 end
 
-debug.Log = function(O)
+debugutils.Log = function(O)
     for _, player in pairs(server.getPlayers()) do
         if player.admin then
-            server.announce("[DEBUG]", debug.DumpTable(O))
+            server.announce("[DEBUG]", debugutils.DumpTable(O))
         end
     end
 end

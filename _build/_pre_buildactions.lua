@@ -10,5 +10,5 @@
 -- Regular lua - you have access to the filesystem etc. via LBFilesystem
 -- Recommend using LBFilepath for paths, to keep things easy
 
--- default is no actions
-print("Build Started - No additional actions taken in _build/_pre_buildactions.lua")
+print(_VERSION)
+

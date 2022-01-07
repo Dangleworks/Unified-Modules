@@ -7,20 +7,26 @@ require("management.vehicle_labels")
 require("management.antisteal")
 require("management.antilag")
 require("management.vehicle_limits")
+require("management.dmz")
 
 -- Module order defines execution order. Put dependancies first.
+-- Module key must match playlist xml name in playlist_xml folder (if zones or vehicles are needed for the module)
+-- example: "playlist_xml/dmz.xml"
+-- It must also match for vehicle files in vehicle_xml folder
+-- example: "vehicle_xml/jail_1.xml"
 modules={
-    VehicleTracking,
-    PlayerTracking,
-    VehicleLabels,
-    VehicleManagement,
-    AntiSteal,
-    VehicleLimits,
-    AntiLag
+    vehicle_tracking=VehicleTracking,
+    player_tracking=PlayerTracking,
+    vehicle_labels=VehicleLabels,
+    vehicle_management=VehicleManagement,
+    antisteal=AntiSteal,
+    vehicle_limits=VehicleLimits,
+    antilag=AntiLag,
+    dmz=DMZ
 }
 
 function onCreate(is_world_create)
-    for _, f in ipairs(modules) do
+    for _, f in pairs(modules) do
         f()
     end
 
