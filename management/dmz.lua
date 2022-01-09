@@ -10,6 +10,7 @@ zone_check_delay = 0
 
 function DMZ()
     AddHook(hooks.onCreate, SetupDMZ)
+    AddHook(hooks.onTick, ProcessZones)
 end
 
 function SetupDMZ(world_create)
