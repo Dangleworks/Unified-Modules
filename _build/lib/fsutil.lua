@@ -34,3 +34,12 @@ fsutil.removeDirectory = function(path, recursive)
         os.execute(string.format('rm -r "%s"', path))
     end
 end
+
+fsutil.rename = function(filepath, newname)
+    if fsutil.isWindows() then
+        filepath = string.gsub(filepath, "/", "\\")
+        os.execute(string.format('rename %s %s', filepath, newname))
+    else
+        error("Not implemented")
+    end
+end
