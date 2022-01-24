@@ -19,6 +19,11 @@ function SetupDMZ(world_create)
     if not g_savedata.dmz then
         g_savedata.dmz = dmz_default_settings
     end
+
+    for pid, player in pairs(player_list) do
+        player.dmz = {}
+        player.dmz.in_zone = false
+    end
 end
 
 function ProcessZones(game_ticks)
@@ -37,6 +42,9 @@ function ProcessZones(game_ticks)
                     in_zone = true
                 end
             end
+
+            if not player.dmz then player.dmz = {} end
+            if player.dmz.in_zone == nil then player.dmz.in_zone = false end
 
             if in_zone and not player.dmz.in_zone then
                 server.notify(pid, "DMZ", "You are now in a DMZ - PvP is not allowed in this zone", 9)

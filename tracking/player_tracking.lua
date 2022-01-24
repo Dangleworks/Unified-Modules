@@ -1,12 +1,35 @@
 -- player tracking
 require("base")
+require("util.debug")
 
+-- TODO: Add a function to store persistant player data in g_savedata and return it in the player object from GetPlayerByPeerId and GetPlayerBySteamId
+-- perhaps accesed through a table ref like player.data.somefield
 player_list = {}
 
 function PlayerTracking()
     AddHook(hooks.onPlayerJoin, TrackPlayer)
     AddHook(hooks.onPlayerLeave, UntrackPlayer)
     AddHook(hooks.onCreate, PopulatePlayerList)
+    AddHook(hooks.onCustomCommand, PlayerTrackingCommands)
+end
+
+function PlayerTrackingCommands(full_message, user_peer_id, is_admin, is_auth, command, args)
+    if is_admin and string.lower(command) == "?playerlist" then
+        for pid, player in pairs(player_list) do
+            server.announce("[PLAYER LIST]", string.format("%d - %s", pid, player.name), user_peer_id)
+        end
+        return
+    end
+    if is_admin and string.lower(command) == "?player" and args[1] and tonumber(args[1]) then
+        local player = GetPlayerByPeerId(tonumber(args[1]))
+        for key, val in pairs(player) do
+            if type(val) == "table" then
+                server.announce("[PLAYER] "..key, debugutils.DumpTable(val), user_peer_id)
+            else
+                server.announce("[PLAYER] "..key, tostring(val), user_peer_id)
+            end
+        end
+    end
 end
 
 function TrackPlayer(steam_id, name, peer_id, is_admin, is_auth)

@@ -44,7 +44,7 @@ function CalculateTPS(game_ticks)
         tps_buff.Push(tps)
         tps_avg = TableMean(tps_buff.values)
         for _, p in pairs(server.getPlayers()) do
-            server.setPopupScreen(p.id, tps_uiid, "FPS", true, "FPS: ".. tps .."\n (AVG: " .. tps_avg .. ")", 0.56, 0.88)
+            server.setPopupScreen(p.id, tps_uiid, "FPS", true, string.format("FPS: %.1f\n(AVG:%.1f)", tps, tps_avg), 0.56, 0.88)
         end
     end
 end

@@ -103,14 +103,16 @@ local playlist_base_locations2 = getFirstMatchingElement(playlist_base_locations
 io.write(" Done\n")
 
 -- Load module XML Files
-for k, _ in pairs(modules) do
-    local file = io.open(string.format("./playlist_xml/%s.xml", k), "r")
-    if file ~= nil then
-        io.write("[INFO] loading playlist "..k..".xml...")
-        playlists[k] = ParseXMLFile(file)
-        io.write(" Done\n")
-    else
-        print("[INFO] no playlist file found for "..k)
+for idx, mod in ipairs(modules) do
+    for k, _ in pairs(mod) do
+        local file = io.open(string.format("./playlist_xml/%s.xml", k), "r")
+        if file ~= nil then
+            io.write("[INFO] loading playlist "..k..".xml...")
+            playlists[k] = ParseXMLFile(file)
+            io.write(" Done\n")
+        else
+            print("[INFO] no playlist file found for "..k)
+        end
     end
 end
 

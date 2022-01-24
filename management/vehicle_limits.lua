@@ -23,9 +23,14 @@ function SetupVehicleLimits(is_create)
     if not g_savedata.vehicle_limits then
         g_savedata.vehicle_limits = vehicle_limits_default_settings
     end
+
+    for idx, player in pairs(server.getPlayers()) do
+        SetBaseVehicleLimit(player.steam_id, player.name, player.id, player.admin, player.auth)
+    end
 end
 
 function SetBaseVehicleLimit(steam_id, name, peer_id, is_admin, is_auth)
+    -- TODO: Get vehicles limits from web service
     GetPlayerByPeerId(peer_id).vehicle_limit = g_savedata.vehicle_limits.base_vehicle_limit
 end
 

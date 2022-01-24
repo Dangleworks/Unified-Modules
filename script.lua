@@ -16,20 +16,22 @@ require("management.jail")
 -- It must also match for vehicle files in vehicle_xml folder
 -- example: "vehicle_xml/jail_1.xml"
 modules={
-    vehicle_tracking=VehicleTracking,
-    player_tracking=PlayerTracking,
-    vehicle_labels=VehicleLabels,
-    vehicle_management=VehicleManagement,
-    antisteal=AntiSteal,
-    vehicle_limits=VehicleLimits,
-    antilag=AntiLag,
-    dmz=DMZ,
-    jail=Jail
+    {vehicle_tracking=VehicleTracking},
+    {player_tracking=PlayerTracking},
+    {vehicle_labels=VehicleLabels},
+    {vehicle_management=VehicleManagement},
+    {antisteal=AntiSteal},
+    {vehicle_limits=VehicleLimits},
+    {antilag=AntiLag},
+    {dmz=DMZ},
+    {jail=Jail}
 }
 
 function onCreate(is_world_create)
-    for _, f in pairs(modules) do
-        f()
+    for _, mod in ipairs(modules) do
+        for _, f in pairs(mod) do 
+            f()
+        end
     end
 
     if hook_funcs[hooks.onCreate] then
