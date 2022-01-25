@@ -11,6 +11,18 @@ zone_check_delay = 0
 function DMZ()
     AddHook(hooks.onCreate, SetupDMZ)
     AddHook(hooks.onTick, ProcessZones)
+    AddHook(hooks.onPlayerJoin, DMZPlayerJoin)
+end
+
+function DMZPlayerJoin(steam_id, name, peer_id, is_admin, is_auth)
+	addDMZZones(peer_id)
+end
+
+function addDMZZones(peer_id)
+	for _, zone in pairs(dmz_zones) do
+		local x,y,z = matrix.position(zone.transform)
+		server.addMapObject(peer_id, dmz_uiid, 0, 8, x, z, 0, 0, 0, 0, "No PvP Zone", dmz_radius, "NO PVP IN GREEN ZONE", 0, 255, 0, 255)
+	end
 end
 
 function SetupDMZ(world_create)
