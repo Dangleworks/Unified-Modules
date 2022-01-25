@@ -1,4 +1,3 @@
-
 function VehicleLabels()
     AddHook(hooks.onVehicleLoad, AddVehicleLabel)
 end
