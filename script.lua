@@ -11,7 +11,7 @@ require("management.jail")
 
 -- Module order defines execution order. Put dependancies first.
 -- Module key must match playlist xml name in playlist_xml folder (if zones or vehicles are needed for the module)
--- example: "playlist_xml/dmz.xml"
+-- example: "playlist_xml/jail.xml"
 -- It must also match for vehicle files in vehicle_xml folder
 -- example: "vehicle_xml/jail_1.xml"
 modules={
