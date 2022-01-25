@@ -8,6 +8,7 @@ require("management.antilag")
 require("management.vehicle_limits")
 require("management.dmz")
 require("management.jail")
+require("util.help")
 
 -- Module order defines execution order. Put dependancies first.
 -- Module key must match playlist xml name in playlist_xml folder (if zones or vehicles are needed for the module)
@@ -15,6 +16,7 @@ require("management.jail")
 -- It must also match for vehicle files in vehicle_xml folder
 -- example: "vehicle_xml/jail_1.xml"
 modules={
+    {help=Help},
     {vehicle_tracking=VehicleTracking},
     {player_tracking=PlayerTracking},
     {vehicle_labels=VehicleLabels},

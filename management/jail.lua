@@ -20,7 +20,7 @@ function JailCreate(is_world_create)
 end
 
 function JailTick(game_ticks)
-    for pid, player in player_list do
+    for pid, player in pairs(player_list) do
         if player.jailed then
             local ploc, ok = server.getPlayerPos()
             if ok then
@@ -42,6 +42,8 @@ function JailCommand(full_message, user_peer_id, is_admin, is_auth, command, arg
         release = false
     elseif command == "?release" or command == "?r" then
         release = true
+    else
+        return
     end
 
     local targ_pid = tonumber(args[1])

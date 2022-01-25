@@ -1,4 +1,5 @@
 
+--@section NewBuffer
 function NewBuffer(maxlen)
     local buffer = {}
     buffer.maxlen = maxlen
@@ -20,3 +21,4 @@ function NewBuffer(maxlen)
     end
     return buffer
 end
+--@endsection
