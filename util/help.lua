@@ -41,7 +41,7 @@ function HelpCommand(full_message, user_peer_id, is_admin, is_auth, command, arg
         server.announce("[HELP]", "--------------------", user_peer_id)
     else
         local entry = help_entries[args[1]]
-        if not entry or not hasAvailbleCommands(entry) then
+        if not entry or not hasAvailableCommands(entry) then
             server.announce("[HELP]", "Topic not found. Type ?help for a list of topics", user_peer_id)
             return
         end
