@@ -9,6 +9,7 @@ require("management.vehicle_limits")
 require("management.dmz")
 require("management.jail")
 require("util.help")
+require("management.autoauth")
 
 -- Module order defines execution order. Put dependancies first.
 -- Module key must match playlist xml name in playlist_xml folder (if zones or vehicles are needed for the module)
@@ -25,7 +26,8 @@ modules={
     {vehicle_limits=VehicleLimits},
     {antilag=AntiLag},
     {dmz=DMZ},
-    {jail=Jail}
+    {jail=Jail},
+    {autoauth=AutoAuth}
 }
 
 function onCreate(is_world_create)
@@ -95,6 +97,14 @@ function onCustomCommand(full_message, user_peer_id, is_admin, is_auth, command,
     if hook_funcs[hooks.onCustomCommand] then
         for _, f in ipairs(hook_funcs[hooks.onCustomCommand]) do
             f(full_message, user_peer_id, is_admin, is_auth, command, args)
+        end
+    end
+end
+
+function httpReply(port, request, reply)
+    if hook_funcs[hooks.httpReply] then
+        for _, f in ipairs(hook_funcs[hooks.httpReply]) do
+            f(port, request, reply)
         end
     end
 end

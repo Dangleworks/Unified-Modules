@@ -1,6 +1,7 @@
 -- player tracking
 require("base")
 require("util.debug")
+require("util.help")
 
 -- TODO: Add a function to store persistant player data in g_savedata and return it in the player object from GetPlayerByPeerId and GetPlayerBySteamId
 -- perhaps accesed through a table ref like player.data.somefield
@@ -11,6 +12,10 @@ function PlayerTracking()
     AddHook(hooks.onPlayerLeave, UntrackPlayer)
     AddHook(hooks.onCreate, PopulatePlayerList)
     AddHook(hooks.onCustomCommand, PlayerTrackingCommands)
+    AddHelpEntry("player_tracking", {
+        {"?playerlist", "Prints a list of players", true},
+        {"?player [peer_id]", "Prints all data for the specified peer id", true}
+    })
 end
 
 function PlayerTrackingCommands(full_message, user_peer_id, is_admin, is_auth, command, args)
@@ -33,13 +38,20 @@ function PlayerTrackingCommands(full_message, user_peer_id, is_admin, is_auth, c
 end
 
 function TrackPlayer(steam_id, name, peer_id, is_admin, is_auth)
+    steam_id = tostring(steam_id)
     player_list[peer_id] = {
         peer_id = peer_id,
-        steam_id=tostring(steam_id),
+        steam_id=steam_id,
         name=name,
         is_admin=is_admin,
         is_auth=is_auth
     }
+
+    if not g_savedata.player_tracking[steam_id] then
+        g_savedata.player_tracking[steam_id] = {}
+    end
+
+    player_list[peer_id].savedata = g_savedata.player_tracking[steam_id]
 end
 
 function PopulatePlayerList()
@@ -58,6 +70,9 @@ function GetPlayerByPeerId(peer_id)
     return player_list[peer_id]
 end
 
+--- Returns stormworks player and addon data
+---@param steam_id string
+---@return Player
 function GetPlayerBySteamId(steam_id)
     local sid = steam_id
     if type(steam_id) ~= "string" then
