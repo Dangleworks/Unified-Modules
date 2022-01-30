@@ -4,7 +4,7 @@ require("tracking.player_tracking")
 require("util.json")
 require("util.url")
 
-moderation_port = 9000
+moderation_port = 3002
 -- IMPORTANT: Replace this value with your actual API key
 key = "potato"
 
@@ -63,7 +63,8 @@ function ModerationCommands(full_message, user_peer_id, is_admin, is_auth, comma
     end
 end
 
-function CheckPlayerOnJoin(steam_id, name, peer_id, is_admin, is_auth)
+function CheckPlayerBanned(steam_id, name, peer_id, is_admin, is_auth)
+    GetPlayerRequest(steam_id, true)
 end
 
 function GlobalBanPlayer(steam_id, temp, time, reason, issuer)
@@ -88,12 +89,17 @@ function GetPlayerRequest(steam_id, only_active_bans)
     server.httpGet(moderation_port, reqString)
 end
 
+function CreatePlayerRequest(steam_id, name)
+    local reqString = string.format("/player/create?steam_id=%s&username=%s&key=%s", steam_id, name, key)
+    server.httpGet(moderation_port, reqString)
+end
+
 function ModerationHttpResponse(port, request, reply)
     if port ~= moderation_port then return end
 
     -- TODO: try to extract the issuer from the request string
     if string.match(request, "^/ban%?steam_id.+") then
-        local qparams = urldecode(request)
+        local qparams = parseurl(request)
         local data = json.parse(reply)
         if data.error then
             if qparams.issuer then
@@ -114,10 +120,13 @@ function ModerationHttpResponse(port, request, reply)
 
     if string.match(request, "^/player%?steam_id.+") then
         local data = json.parse(reply)
-        local qparams = urldecode(request)
+        local qparams = parseurl(request)
         if data.error then
             if data.error.statusCode == 404 then
-                CreatePlayerRequest(qparams.steam_id, qparams.username)
+                local player = GetPlayerBySteamId(qparams.steam_id)
+                if player then
+                    CreatePlayerRequest(player.steam_id, player.name)
+                end
             end
             return
         end

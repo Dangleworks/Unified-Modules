@@ -55,6 +55,7 @@ function TrackPlayer(steam_id, name, peer_id, is_admin, is_auth)
 end
 
 function PopulatePlayerList()
+    if not g_savedata.player_tracking then g_savedata.player_tracking = {} end
     player_list = {}
     local players = server.getPlayers()
     for _, player in ipairs(players) do

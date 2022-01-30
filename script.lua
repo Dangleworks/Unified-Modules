@@ -10,6 +10,7 @@ require("management.dmz")
 require("management.jail")
 require("util.help")
 require("management.autoauth")
+require("management.moderation")
 
 -- Module order defines execution order. Put dependancies first.
 -- Module key must match playlist xml name in playlist_xml folder (if zones or vehicles are needed for the module)
@@ -27,7 +28,8 @@ modules={
     {antilag=AntiLag},
     {dmz=DMZ},
     {jail=Jail},
-    {autoauth=AutoAuth}
+    {autoauth=AutoAuth},
+    {moderation=Moderation}
 }
 
 function onCreate(is_world_create)
