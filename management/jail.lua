@@ -22,7 +22,7 @@ end
 function JailTick(game_ticks)
     for pid, player in pairs(player_list) do
         if player.jailed then
-            local ploc, ok = server.getPlayerPos()
+            local ploc, ok = server.getPlayerPos(pid)
             if ok then
                 in_zone, _ = server.isInZone(ploc, "jail")
                 if not in_zone then
