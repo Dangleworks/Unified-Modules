@@ -11,6 +11,7 @@ require("management.jail")
 require("util.help")
 require("management.autoauth")
 require("management.moderation")
+require("management.radiation_clean")
 
 -- Module order defines execution order. Put dependancies first.
 -- Module key must match playlist xml name in playlist_xml folder (if zones or vehicles are needed for the module)
@@ -29,7 +30,8 @@ modules={
     {dmz=DMZ},
     {jail=Jail},
     {autoauth=AutoAuth},
-    {moderation=Moderation}
+    {moderation=Moderation},
+    {radiation_clean=RadiationClean}
 }
 
 function onCreate(is_world_create)
