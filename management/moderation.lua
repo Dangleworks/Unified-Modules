@@ -1,0 +1,138 @@
+require("base")
+require("tracking.vehicle_tracking")
+require("tracking.player_tracking")
+require("util.json")
+require("util.url")
+
+moderation_port = 9000
+-- IMPORTANT: Replace this value with your actual API key
+key = "potato"
+
+function Moderation()
+    AddHook(hooks.onCustomCommand, ModerationCommands)
+    AddHook(hooks.onPlayerJoin, CheckPlayerBanned)
+    AddHook(hooks.httpReply, ModerationHttpResponse)
+end
+
+function ModerationCommands(full_message, user_peer_id, is_admin, is_auth, command, args)
+    command = string.lower(command)
+    if not is_admin then return end
+    if not args[1] or not tonumber(args[1]) then
+        server.announce("[MODERATION]", "Please provide a peer id", user_peer_id)
+        return
+    end
+    local peer_id = tonumber(args[1])
+    if command == "?gban" then
+        local player = GetPlayerByPeerId(peer_id)
+        if not player then
+            server.announce("[MODERATION]", "Player not found", user_peer_id)
+            return
+        end
+
+        local issuer = GetPlayerByPeerId(user_peer_id).steam_id
+        local steam_id = player.steam_id
+        local temp = false
+        local time = ""
+        local reason = ""
+        local reason = "Unspecified"
+        local reasonStart = 0
+
+        -- ?gban <peer_id> temp <time> [reason]
+        if args[2] and args[2] == "temp" and args[3] then
+            temp = true
+            time = args[3]
+            reasonStart = 4
+        -- ?gban <peer_id> [reason]
+        else
+            reasonStart = 2
+        end
+
+        if #args >= reasonStart then
+            reason = ""
+            for i=reasonStart, #args do
+                reason = reason.." "..args[i]
+            end
+        end
+
+        GlobalBanPlayer(steam_id, temp, time, reason, issuer)
+        return
+    end
+
+    if command == "?deauth" then
+        
+    end
+end
+
+function CheckPlayerOnJoin(steam_id, name, peer_id, is_admin, is_auth)
+end
+
+function GlobalBanPlayer(steam_id, temp, time, reason, issuer)
+    local reqString = ""
+    if temp then
+        reqString = string.format("/ban?steam_id=%s&issuer=%s&time=%s&reason=%s&key=%s", steam_id, issuer, time, urlencode(reason), key)
+    else
+        reqString = string.format("/ban?steam_id=%s&issuer=%s&permanent=true&reason=%s&key=%s", steam_id, issuer, urlencode(reason), key)
+    end
+    server.httpGet(moderation_port, reqString)
+end
+
+function UpdatePlayerRequest(steam_id, name)
+    local reqString = string.format("/player/update?steam_id=%s&username=%s&key=%s", steam_id, name, key)
+    server.httpGet(moderation_port, reqString)
+end
+--- Submit request for player object from api
+---@param steam_id string
+---@param only_active_bans boolean
+function GetPlayerRequest(steam_id, only_active_bans)
+    local reqString = string.format("/player?steam_id=%s&key=%s&only_active_bans=%s", steam_id, key, tostring(only_active_bans))
+    server.httpGet(moderation_port, reqString)
+end
+
+function ModerationHttpResponse(port, request, reply)
+    if port ~= moderation_port then return end
+
+    -- TODO: try to extract the issuer from the request string
+    if string.match(request, "^/ban%?steam_id.+") then
+        local qparams = urldecode(request)
+        local data = json.parse(reply)
+        if data.error then
+            if qparams.issuer then
+                local issuer = GetPlayerBySteamId(qparams.issuer)
+                server.announce("[MODERATION]", "Error submitting global ban: "..data.error.msg, issuer.id)
+            end
+            return
+        end
+
+        local issuer = GetPlayerBySteamId(data.issuer)
+        server.announce("[MODERATION]", "Global ban successful", issuer.id)
+        local player = GetPlayerBySteamId(data.player)
+        if player then
+            server.kickPlayer(player.id)
+        end
+        return
+    end
+
+    if string.match(request, "^/player%?steam_id.+") then
+        local data = json.parse(reply)
+        local qparams = urldecode(request)
+        if data.error then
+            if data.error.statusCode == 404 then
+                CreatePlayerRequest(qparams.steam_id, qparams.username)
+            end
+            return
+        end
+
+        local player = GetPlayerBySteamId(data.steamid)
+        -- player probably left before reply came back
+        if not player then return end
+
+        if data.username ~= player.name then
+            UpdatePlayerRequest(data.steamid, player.name)
+        end
+
+        -- if request was only for active bans, and there is a bans result...then player is banned!
+        if qparams.only_active_bans == "true" and data.bans then
+            server.kickPlayer(player.id)
+        end
+    end
+end
