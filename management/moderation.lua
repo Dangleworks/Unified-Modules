@@ -17,7 +17,8 @@ end
 function ModerationCommands(full_message, user_peer_id, is_admin, is_auth, command, args)
     command = string.lower(command)
     if not is_admin then return end
-    if not args[1] or not command=="?gban" or not command=="?deauth" or not tonumber(args[1]) then
+    if not (command == "?gban" or command =="?deauth") then return end
+    if not args[1] or not tonumber(args[1]) then
         server.announce("[MODERATION]", "Please provide a peer id", user_peer_id)
         return
     end
