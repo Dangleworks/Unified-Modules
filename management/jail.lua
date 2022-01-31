@@ -13,8 +13,8 @@ function JailCreate(is_world_create)
 		jail_zone = zones[1]
 	end
 	
-	local zones = server.getZones("release")
-	if zones[1] ~= nil then
+	 zones = server.getZones("release")
+     if zones[1] ~= nil then
 		release_zone = zones[1]
 	end
 end
@@ -24,7 +24,7 @@ function JailTick(game_ticks)
         if player.jailed then
             local ploc, ok = server.getPlayerPos(pid)
             if ok then
-                in_zone, _ = server.isInZone(ploc, "jail")
+                in_zone, _ = server.isInZone(ploc, "Jail Zone")
                 if not in_zone then
                     server.setPlayerPos(pid, jail_zone.transform)
                 end
@@ -70,9 +70,9 @@ function JailCommand(full_message, user_peer_id, is_admin, is_auth, command, arg
             server.announce("[JAIL]", "Player is not in jail", user_peer_id)
         else
             player.jailed = false
-            server.setPlayerPos(targ_pid, release_zone.transform)
+            server.setPlayerPos(player.peer_id, release_zone.transform)
             server.announce("[JAIL]", "Player has been released from jail", user_peer_id)
-            server.announce("[JAIL]", "You have been released from jail. Please be mindful of your behavior.", targ_pid)
+            server.announce("[JAIL]", "You have been released from jail. Please be mindful of your behavior.", player.peer_id)
         end
     end
 end

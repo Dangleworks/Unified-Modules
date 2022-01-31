@@ -63,7 +63,7 @@ function PopulatePlayerList()
     end
 end
 
-function UntrackPlayer(peer_id)
+function UntrackPlayer(steam_id, name, peer_id, is_admin, is_auth)
     player_list[peer_id] = nil
 end
 
