@@ -4,6 +4,7 @@ require("util.help")
 function VehicleManagement()
     AddHook(hooks.onCustomCommand, VehicleManagementCommands)
     AddHook(hooks.onCreate, function(is_create) server.cleanVehicles() end)
+    AddHook(hooks.onPlayerLeave, CleanVehiclesOnLeave)
     AddHelpEntry("vehicles", {
         {"?clean", "Removes all of your vehicles from the map"},
         {"?c", "An alias for ?clean"},
@@ -11,6 +12,10 @@ function VehicleManagement()
         {"?despawn [id]", "Depawns your specific vehicle with the given id"},
         {"?d [id]", "An alias for ?despawn"}
     })
+end
+
+function CleanVehiclesOnLeave(steam_id, name, peer_id, is_admin, is_auth)
+    ClearUsersVehicles(peer_id, -1)
 end
 
 function VehicleManagementCommands(full_message, user_peer_id, is_admin, is_auth, command, args)
