@@ -64,18 +64,21 @@ function CheckVehicleLimit(vehicle_id, peer_id, x, y, z, cost)
 end
 
 function UpdateVehicleCountPopup(ticks)
-        -- TODO: Split vehicle spawn limits out into seperate module
         vpop_delay = vpop_delay + 1
         if vpop_delay > 60 then
             vpop_delay = 0
             for pid, player in pairs(player_list) do
-                local vlimit = player.vehicle_limit
-                local vehicles = GetUsersVehicles(pid)
-                local vcount = TableLength(vehicles)
-                if g_savedata.antilag.disable_vehicle_limit then
-                    server.setPopupScreen(player.id, vehicle_uiid, "Vehicles", true, string.format("Vehicles: %d", vcount), 0.4, 0.88)
+                if not server.getPlayerName(pid) then
+                    debug.log("[DEBUG] UpdateVehicleCountPopup - tracked player not found in server")
                 else
-                    server.setPopupScreen(player.id, vehicle_uiid, "Vehicles", true, string.format("Vehicles: %d/%d", vcount, vlimit), 0.4, 0.88)
+                    local vlimit = player.vehicle_limit
+                    local vehicles = GetUsersVehicles(pid)
+                    local vcount = TableLength(vehicles)
+                    if g_savedata.antilag.disable_vehicle_limit then
+                        server.setPopupScreen(player.peer_id, vehicle_uiid, "Vehicles", true, string.format("Vehicles: %d", vcount), 0.4, 0.88)
+                    else
+                        server.setPopupScreen(player.peer_id, vehicle_uiid, "Vehicles", true, string.format("Vehicles: %d/%d", vcount, vlimit), 0.4, 0.88)
+                    end
                 end
             end
         end
