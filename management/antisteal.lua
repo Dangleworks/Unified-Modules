@@ -18,14 +18,14 @@ function AntiStealCommands(full_message, user_peer_id, is_admin, is_auth, comman
         if vehicle_id then
             SetVehicleLocked(user_peer_id, vehicle_id, true)
         else
-            server.notify(user_peer_id, "Anti-Steal", "Vehicle not found", 1)
+            server.notify(user_peer_id, "Anti-Steal", "Invalid vehicle ID", 1)
         end
     elseif command == "?u" or command == "?unlock" then
         local vehicle_id = tonumber(args[1])
         if vehicle_id then
             SetVehicleLocked(user_peer_id, vehicle_id, false)
         else
-            server.notify(user_peer_id, "Anti-Steal", "Vehicle not found", 1)
+            server.notify(user_peer_id, "Anti-Steal", "Invalid vehicle ID", 1)
         end
     end
 end

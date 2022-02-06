@@ -1,10 +1,9 @@
 function urlencode(str)
-	if str == nil then
-		return ""
-	end
-	str = string.gsub(str, "([^%w _ %- . ~])", cth)
-	str = str:gsub(" ", "%%20")
-	return str
+  function cth(c) return string.format("%%%02X", string.byte(c)) end
+  if str == nil then return "" end
+  str = string.gsub(str, "([^%w _ %- . ~])", cth)
+  str = str:gsub(" ", "%%20")
+  return str
 end
 
 function urldecode(s)

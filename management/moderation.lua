@@ -3,6 +3,7 @@ require("tracking.vehicle_tracking")
 require("tracking.player_tracking")
 require("util.json")
 require("util.url")
+require("util.help")
 
 moderation_port = 3002
 -- IMPORTANT: Replace this value with your actual API key
@@ -12,6 +13,10 @@ function Moderation()
     AddHook(hooks.onCustomCommand, ModerationCommands)
     AddHook(hooks.onPlayerJoin, CheckPlayerBanned)
     AddHook(hooks.httpReply, ModerationHttpResponse)
+    AddHelpEntry("moderation", {
+        {"?gban peer_id [[temp] time] [reason]", "Temp ban player - ex: ?gban 4 temp 5h Spamming and trolling", true},
+        {"?gban peer_id [reason]", "Perma ban player - ex: ?gban 4 Spawning lag bombs", true},
+    })
 end
 
 function ModerationCommands(full_message, user_peer_id, is_admin, is_auth, command, args)
@@ -34,10 +39,8 @@ function ModerationCommands(full_message, user_peer_id, is_admin, is_auth, comma
         local steam_id = player.steam_id
         local temp = false
         local time = ""
-        local reason = ""
         local reason = "Unspecified"
         local reasonStart = 0
-
         -- ?gban <peer_id> temp <time> [reason]
         if args[2] and args[2] == "temp" and args[3] then
             temp = true
@@ -47,14 +50,12 @@ function ModerationCommands(full_message, user_peer_id, is_admin, is_auth, comma
         else
             reasonStart = 2
         end
-
         if #args >= reasonStart then
             reason = ""
             for i=reasonStart, #args do
                 reason = reason.." "..args[i]
             end
         end
-
         GlobalBanPlayer(steam_id, temp, time, reason, issuer)
         return
     end
@@ -79,7 +80,7 @@ function GlobalBanPlayer(steam_id, temp, time, reason, issuer)
 end
 
 function UpdatePlayerRequest(steam_id, name)
-    local reqString = string.format("/player/update?steam_id=%s&username=%s&key=%s", steam_id, name, key)
+    local reqString = string.format("/player/update?steam_id=%s&username=%s&key=%s", steam_id, urlencode(name), key)
     server.httpGet(moderation_port, reqString)
 end
 --- Submit request for player object from api
@@ -91,30 +92,28 @@ function GetPlayerRequest(steam_id, only_active_bans)
 end
 
 function CreatePlayerRequest(steam_id, name)
-    local reqString = string.format("/player/create?steam_id=%s&username=%s&key=%s", steam_id, name, key)
+    local reqString = string.format("/player/create?steam_id=%s&username=%s&key=%s", steam_id, urlencode(name), key)
     server.httpGet(moderation_port, reqString)
 end
 
 function ModerationHttpResponse(port, request, reply)
     if port ~= moderation_port then return end
-
-    -- TODO: try to extract the issuer from the request string
     if string.match(request, "^/ban%?steam_id.+") then
         local qparams = parseurl(request)
         local data = json.parse(reply)
         if data.error then
             if qparams.issuer then
                 local issuer = GetPlayerBySteamId(qparams.issuer)
-                server.announce("[MODERATION]", "Error submitting global ban: "..data.error.msg, issuer.id)
+                server.announce("[MODERATION]", "Error submitting global ban: "..data.error.msg, issuer.peer_id)
             end
             return
         end
 
         local issuer = GetPlayerBySteamId(data.issuer)
-        server.announce("[MODERATION]", "Global ban successful", issuer.id)
         local player = GetPlayerBySteamId(data.player)
+        server.announce("[MODERATION]", "Global ban successful", issuer.peer_id)
         if player then
-            server.kickPlayer(player.id)
+            server.kickPlayer(player.peer_id)
         end
         return
     end
@@ -142,7 +141,7 @@ function ModerationHttpResponse(port, request, reply)
 
         -- if request was only for active bans, and there is a bans result...then player is banned!
         if qparams.only_active_bans == "true" and data.bans then
-            server.kickPlayer(player.id)
+            server.kickPlayer(player.peer_id)
         end
     end
 end

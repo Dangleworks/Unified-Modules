@@ -30,7 +30,7 @@ function HelpCommand(full_message, user_peer_id, is_admin, is_auth, command, arg
 
     if not args[1] then
         server.announce("[HELP]", "--------------------", user_peer_id)
-        server.announce("[HELP]", "Specify a topic for detailed help (example ?help vehicles)")
+        server.announce("[HELP]", "Specify a topic for detailed help (example ?help vehicles)", user_peer_id)
         server.announce("[HELP]", "AVAILABLE HELP TOPICS:", user_peer_id)
         for slug, entry in pairs(help_entries) do
             local show = is_admin or hasAvailableCommands(slug)
