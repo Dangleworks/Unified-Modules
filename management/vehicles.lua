@@ -19,7 +19,6 @@ function CleanVehiclesOnLeave(steam_id, name, peer_id, is_admin, is_auth)
 end
 
 function VehicleManagementCommands(full_message, user_peer_id, is_admin, is_auth, command, args)
-    -- ?c, ?d
     command = string.lower(command)
     if command == "?c" or command == "?clean" then
         local targ_pid = user_peer_id
@@ -67,10 +66,10 @@ function ClearUsersVehicles(peer_id, requester)
     if requester == peer_id then
         DespawnVehicles(vehicles)
         server.notify(peer_id, "Vehicle Management", "Your vehicles have been cleaned up", 9)
-    elseif requester == -1 or GetPlayerByPeerId(requester).is_admin then
+    elseif requester == -1 or (GetPlayerByPeerId(requester) and GetPlayerByPeerId(requester).is_admin) then
         local count = DespawnVehicles(vehicles)
         server.notify(peer_id, "Vehicle Management", "Your vehicles have been cleaned up by an admin", 1)
-        server.notify(requester, "Vehicle Management", string.format("Cleaned up %d vehicles", count))
+        server.notify(requester, "Vehicle Management", string.format("Cleaned up %d vehicles", count), 1)
     else
         server.notify(peer_id, "Vehicle Management", "You do not have permission run this command", 1)
     end
