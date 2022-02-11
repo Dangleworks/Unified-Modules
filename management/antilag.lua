@@ -6,7 +6,7 @@ require("tracking.player_tracking")
 require("util.debug")
 
 antilag_default_settings = {
-    max_mass = 70000,
+    max_mass = 100000,
     tps_threshold = 45,
     load_time_threshold = 3000,
     tps_recover_time = 4000,
@@ -82,7 +82,7 @@ function AntilagOnTick(game_ticks)
                 server.despawnVehicle(vid, true)
                 -- todo: notifty admins or log
             elseif not avg_ok and ins_ok then
-                server.notify(vehicle.peer_id, "Antilag", string.format("Vehicle %d was despawned. Average FPS did not recover in time (%0.2f to %0.2f)", vid, vehicle.antilag.spawn_avg_tps, tps_avg), 6)
+                server.notify(vehicle.peer_id, "Antilag", string.format("Vehicle %d was despawned. Average FPS did not recover in time (%0.2f to %0.2f)", vid, vehicle.antilag.spawn_tps_avg, tps_avg), 6)
                 --todo: notify admins and log
                 server.despawnVehicle(vid, true)
             elseif avg_ok and ins_ok then
