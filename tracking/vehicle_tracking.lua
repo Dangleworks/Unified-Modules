@@ -10,7 +10,6 @@ function VehicleTracking()
     AddHook(hooks.onVehicleDespawn, UntrackVehicle)
 end
 
-
 function TrackVehicle(vehicle_id, peer_id, x, y, z, cost)
     if peer_id == -1 then return end
     
@@ -52,6 +51,9 @@ function GetUsersVehicles(peer_id)
     return vehicles
 end
 
+--- Get user vehicle from vehicle id
+---@param vehicle_id number
+---@return Vehicle
 function GetUserVehicle(vehicle_id)
     return vehicle_list[vehicle_id]
 end
@@ -96,7 +98,7 @@ function VehicleTrackingCommands(full_message, user_peer_id, is_admin, is_auth, 
     end
 
     if is_admin and command == "?vehicle" and args[1] and tonumber(args[1]) then
-        local vid = tonumber[args1]
+        local vid = tonumber[args[1]]
         local vehicle = GetUserVehicle(vid)
         if not vehicle then
             server.announce("[VEHICLE DATA]", "Vehicle not found", user_peer_id)

@@ -67,6 +67,9 @@ function UntrackPlayer(steam_id, name, peer_id, is_admin, is_auth)
     player_list[peer_id] = nil
 end
 
+--- Get tracked player by peer id
+---@param peer_id number
+---@return Player
 function GetPlayerByPeerId(peer_id)
     return player_list[peer_id]
 end
