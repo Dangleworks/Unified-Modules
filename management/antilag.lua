@@ -67,7 +67,7 @@ function AntilagOnTick(game_ticks)
         if not vehicle.loaded then
             if dtime > g_savedata.antilag.load_time_threshold then
                 server.despawnVehicle(vid, true)
-                server.notify(vehicle.peer_id, "Antilag", string.format("Your vehicle was despawned for exceeding the maxmimum load time of %.1f seconds.", g_savedata.antilag.load_time_threshold))
+                server.notify(vehicle.peer_id, "Antilag", string.format("Your vehicle was despawned for exceeding the maxmimum load time of %.1f seconds.", g_savedata.antilag.load_time_threshold), 6)
                 -- todo: notify admins or log
             end
         elseif not vehicle.antilag.cleared and dtime > g_savedata.antilag.tps_recover_time then
