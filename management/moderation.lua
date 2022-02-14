@@ -8,14 +8,16 @@ require("util.help")
 moderation_port = 3002
 -- IMPORTANT: Replace this value with your actual API key
 key = "potato"
+queue_check_timer = 0
 
 function Moderation()
     AddHook(hooks.onCustomCommand, ModerationCommands)
     AddHook(hooks.onPlayerJoin, CheckPlayerBanned)
     AddHook(hooks.httpReply, ModerationHttpResponse)
+    AddHook(hooks.onTick, CheckModerationQueue)
     AddHelpEntry("moderation", {
         {"?gban peer_id [[temp] time] [reason]", "Temp ban player - ex: ?gban 4 temp 5h Spamming and trolling", true},
-        {"?gban peer_id [reason]", "Perma ban player - ex: ?gban 4 Spawning lag bombs", true},
+        {"?gban peer_id [reason]", "Permanently ban player - ex: ?gban 4 Spawning lag bombs", true},
     })
 end
 
@@ -65,6 +67,15 @@ function ModerationCommands(full_message, user_peer_id, is_admin, is_auth, comma
     end
 end
 
+function CheckModerationQueue(game_ticks)
+    queue_check_timer = queue_check_timer + 1
+    if queue_check_timer > 60 then
+        queue_check_timer = 0
+        local reqString = string.format("/queue/moderation?key=%s", key)
+        server.httpGet(moderation_port, reqString)
+    end
+end
+
 function CheckPlayerBanned(steam_id, name, peer_id, is_admin, is_auth)
     GetPlayerRequest(steam_id, true)
 end
@@ -93,6 +104,13 @@ end
 
 function CreatePlayerRequest(steam_id, name)
     local reqString = string.format("/player/create?steam_id=%s&username=%s&key=%s", steam_id, urlencode(name), key)
+    server.httpGet(moderation_port, reqString)
+end
+
+--- Sends HTTP request to mark the queue item as processed
+---@param item_id number
+function SetModerationQeueItemProcessed(item_id)
+    local reqString = string.format("/queue/moderation/processed?key=%s&id=", key, item_id)
     server.httpGet(moderation_port, reqString)
 end
 
@@ -142,6 +160,26 @@ function ModerationHttpResponse(port, request, reply)
         -- if request was only for active bans, and there is a bans result...then player is banned!
         if qparams.only_active_bans == "true" and data.bans then
             server.kickPlayer(player.peer_id)
+        end
+    end
+
+    if string.match(request, "^/queue/moderation%?key.+") then
+        local data = json.parse(reply)
+        debug.log("[DEBUG] ModerationHttpResponse.queue: "..reply)
+        if data.error then
+            return
+        end
+        -- This format should allow for implementing other moderation actions later
+        if type(data) == "table" and #table > 0 then
+            for _, item in pairs(data) do
+                if item.action == "kick" or item.action == "ban" then
+                    local player = GetPlayerBySteamId(item.player)
+                    if player then
+                        server.kickPlayer(player.peer_id)
+                        SetModerationQeueItemProcessed(item.id)
+                    end
+                end
+            end
         end
     end
 end
