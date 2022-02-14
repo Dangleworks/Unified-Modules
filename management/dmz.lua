@@ -59,7 +59,13 @@ function ProcessZones(game_ticks)
             if player.dmz.in_zone == nil then player.dmz.in_zone = false end
             if in_zone then
                 local cid = server.getPlayerCharacterID(player.peer_id)
-                server.setCharacterData(cid, 100, true, false)
+                local cd = server.getCharacterData(cid)
+                if cd.hp < 100 then
+                    server.setCharacterData(cid, 100, true, false)
+                end
+                if cd.incapacitated then
+                    server.reviveCharacter(cid)
+                end
             end
 
             if in_zone and not player.dmz.in_zone then
