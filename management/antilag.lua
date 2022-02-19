@@ -63,7 +63,10 @@ function AntilagOnTick(game_ticks)
     end
 
     for vid, vehicle in pairs(vehicle_list) do
-        local dtime = ctime - vehicle.antilag.spawn_time
+        local spawn_time = vehicle.antilag.spawn_time
+        if not spawn_time then spawn_time = ctime end
+
+        local dtime = ctime - spawn_time
         if not vehicle.loaded then
             if dtime > g_savedata.antilag.load_time_threshold then
                 server.despawnVehicle(vid, true)
