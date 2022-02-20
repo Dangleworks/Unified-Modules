@@ -69,7 +69,10 @@ function ClearUsersVehicles(peer_id, requester)
     elseif requester == -1 or (GetPlayerByPeerId(requester) and GetPlayerByPeerId(requester).is_admin) then
         local count = DespawnVehicles(vehicles)
         server.notify(peer_id, "Vehicle Management", "Your vehicles have been cleaned up by an admin", 1)
-        server.notify(requester, "Vehicle Management", string.format("Cleaned up %d vehicles", count), 1)
+        -- don't notify requester if requester is server
+        if requester ~= -1 then
+            server.notify(requester, "Vehicle Management", string.format("Cleaned up %d vehicles", count), 1)
+        end
     else
         server.notify(peer_id, "Vehicle Management", "You do not have permission run this command", 1)
     end
