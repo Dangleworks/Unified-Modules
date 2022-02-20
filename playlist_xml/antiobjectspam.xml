@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<playlist path_id="app_data/data/missions/test" folder_path="data/missions/test" file_store="4" name="Anti Object Spam">
+	<locations location_id_counter="1" component_id_counter="1">
+		<locations>
+			<l id="1" name="OCEAN" is_env_mod="true" env_mod_spawn_num="1">
+				<components>
+					<c component_type="10" id="1" cargo_zone_import_cargo_type="ref_object_area" display_name="ref_object_area" dynamic_object_type="2" character_outfit_category="11" character_type="1" vehicle_file_store="1">
+						<spawn_transform 30="-0.308879" 31="-40.210297" 32="-0.361218"/>
+						<spawn_bounds>
+							<min x="-5" y="-5" z="-5"/>
+							<max x="5" y="5" z="5"/>
+						</spawn_bounds>
+						<graph_links/>
+					</c>
+				</components>
+			</l>
+		</locations>
+	</locations>
+</playlist>
+
