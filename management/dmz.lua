@@ -57,16 +57,17 @@ function ProcessZones(game_ticks)
 
             if not player.dmz then player.dmz = {} end
             if player.dmz.in_zone == nil then player.dmz.in_zone = false end
-            if in_zone then
-                local cid = server.getPlayerCharacterID(player.peer_id)
-                local cd = server.getCharacterData(cid)
-                if cd.hp < 100 then
-                    server.setCharacterData(cid, 100, true, false)
-                end
-                if cd.incapacitated then
-                    server.reviveCharacter(cid)
-                end
-            end
+
+            --if in_zone then
+            --    local cid = server.getPlayerCharacterID(player.peer_id)
+            --    local cd = server.getCharacterData(cid)
+            --    if cd.hp < 100 then
+            --        server.setCharacterData(cid, 100, true, false)
+            --    end
+            --    if cd.incapacitated then
+            --        server.reviveCharacter(cid)
+            --    end
+            --end
 
             if in_zone and not player.dmz.in_zone then
                 server.notify(pid, "DMZ", "You are now in a DMZ - PvP is not allowed in this zone", 9)
