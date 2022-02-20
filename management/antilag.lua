@@ -63,34 +63,36 @@ function AntilagOnTick(game_ticks)
     end
 
     for vid, vehicle in pairs(vehicle_list) do
-        local spawn_time = vehicle.antilag.spawn_time
-        if not spawn_time then spawn_time = ctime end
+        if vehicle.antilag then
+            local spawn_time = vehicle.antilag.spawn_time
+            local dtime = ctime - spawn_time
+            if not vehicle.loaded then
+                if dtime > g_savedata.antilag.load_time_threshold then
+                    server.despawnVehicle(vid, true)
+                    server.notify(vehicle.peer_id, "Antilag", string.format("Your vehicle was despawned for exceeding the maxmimum load time of %.1f seconds.", g_savedata.antilag.load_time_threshold), 6)
+                    -- todo: notify admins or log
+                end
+            elseif not vehicle.antilag.cleared and dtime > g_savedata.antilag.tps_recover_time then
+                local avg_ok = (vehicle.antilag.spawn_tps_avg - tps_avg) < g_savedata.antilag.tps_avg_diff_threshold
+                local ins_ok = (vehicle.antilag.spawn_tps - tps) < g_savedata.antilag.tps_threshold
 
-        local dtime = ctime - spawn_time
-        if not vehicle.loaded then
-            if dtime > g_savedata.antilag.load_time_threshold then
-                server.despawnVehicle(vid, true)
-                server.notify(vehicle.peer_id, "Antilag", string.format("Your vehicle was despawned for exceeding the maxmimum load time of %.1f seconds.", g_savedata.antilag.load_time_threshold), 6)
-                -- todo: notify admins or log
+                if not avg_ok and ins_ok and vehicle.antilag.stabilize_count < g_savedata.antilag.vehicle_stabilize_chances then
+                    vehicle.antilag.spawn_time=ctime
+                    vehicle.antilag.stabilize_count = vehicle.antilag.stabilize_count + 1
+                elseif not avg_ok and not ins_ok then
+                    server.notify(vehicle.peer_id, "Antilag", string.format("Vehicle %d was despawned. Server FPS did not stabilize in time (%0.2f to %0.2f)", vid, vehicle.antilag.spawn_tps, tps), 6)
+                    server.despawnVehicle(vid, true)
+                    -- todo: notifty admins or log
+                elseif not avg_ok and ins_ok then
+                    server.notify(vehicle.peer_id, "Antilag", string.format("Vehicle %d was despawned. Average FPS did not recover in time (%0.2f to %0.2f)", vid, vehicle.antilag.spawn_tps_avg, tps_avg), 6)
+                    --todo: notify admins and log
+                    server.despawnVehicle(vid, true)
+                elseif avg_ok and ins_ok then
+                    vehicle.antilag.cleared = true
+                end
             end
-        elseif not vehicle.antilag.cleared and dtime > g_savedata.antilag.tps_recover_time then
-            local avg_ok = (vehicle.antilag.spawn_tps_avg - tps_avg) < g_savedata.antilag.tps_avg_diff_threshold
-            local ins_ok = (vehicle.antilag.spawn_tps - tps) < g_savedata.antilag.tps_threshold
-
-            if not avg_ok and ins_ok and vehicle.antilag.stabilize_count < g_savedata.antilag.vehicle_stabilize_chances then
-                vehicle.antilag.spawn_time=ctime
-                vehicle.antilag.stabilize_count = vehicle.antilag.stabilize_count + 1
-            elseif not avg_ok and not ins_ok then
-                server.notify(vehicle.peer_id, "Antilag", string.format("Vehicle %d was despawned. Server FPS did not stabilize in time (%0.2f to %0.2f)", vid, vehicle.antilag.spawn_tps, tps), 6)
-                server.despawnVehicle(vid, true)
-                -- todo: notifty admins or log
-            elseif not avg_ok and ins_ok then
-                server.notify(vehicle.peer_id, "Antilag", string.format("Vehicle %d was despawned. Average FPS did not recover in time (%0.2f to %0.2f)", vid, vehicle.antilag.spawn_tps_avg, tps_avg), 6)
-                --todo: notify admins and log
-                server.despawnVehicle(vid, true)
-            elseif avg_ok and ins_ok then
-                vehicle.antilag.cleared = true
-            end
+        else
+            debug.log("[DEBUG] ERROR: Antilag not present on vehicle record")
         end
     end
 end
