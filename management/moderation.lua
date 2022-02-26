@@ -71,7 +71,7 @@ function CheckModerationQueue(game_ticks)
     queue_check_timer = queue_check_timer + 1
     if queue_check_timer > 60 then
         queue_check_timer = 0
-        local reqString = string.format("/queue/moderation?key=%s", key)
+        local reqString = string.format("/game/queue/moderation?key=%s", key)
         server.httpGet(moderation_port, reqString)
     end
 end
@@ -83,40 +83,40 @@ end
 function GlobalBanPlayer(steam_id, temp, time, reason, issuer)
     local reqString = ""
     if temp then
-        reqString = string.format("/ban?steam_id=%s&issuer=%s&time=%s&reason=%s&key=%s", steam_id, issuer, time, urlencode(reason), key)
+        reqString = string.format("/game/ban?steam_id=%s&issuer=%s&time=%s&reason=%s&key=%s", steam_id, issuer, time, urlencode(reason), key)
     else
-        reqString = string.format("/ban?steam_id=%s&issuer=%s&permanent=true&reason=%s&key=%s", steam_id, issuer, urlencode(reason), key)
+        reqString = string.format("/game/ban?steam_id=%s&issuer=%s&permanent=true&reason=%s&key=%s", steam_id, issuer, urlencode(reason), key)
     end
     server.httpGet(moderation_port, reqString)
 end
 
 function UpdatePlayerRequest(steam_id, name)
-    local reqString = string.format("/player/update?steam_id=%s&username=%s&key=%s", steam_id, urlencode(name), key)
+    local reqString = string.format("/game/player/update?steam_id=%s&username=%s&key=%s", steam_id, urlencode(name), key)
     server.httpGet(moderation_port, reqString)
 end
 --- Submit request for player object from api
 ---@param steam_id string
 ---@param only_active_bans boolean
 function GetPlayerRequest(steam_id, only_active_bans)
-    local reqString = string.format("/player?steam_id=%s&key=%s&only_active_bans=%s", steam_id, key, tostring(only_active_bans))
+    local reqString = string.format("/game/player?steam_id=%s&key=%s&only_active_bans=%s", steam_id, key, tostring(only_active_bans))
     server.httpGet(moderation_port, reqString)
 end
 
 function CreatePlayerRequest(steam_id, name)
-    local reqString = string.format("/player/create?steam_id=%s&username=%s&key=%s", steam_id, urlencode(name), key)
+    local reqString = string.format("/game/player/create?steam_id=%s&username=%s&key=%s", steam_id, urlencode(name), key)
     server.httpGet(moderation_port, reqString)
 end
 
 --- Sends HTTP request to mark the queue item as processed
 ---@param item_id number
 function SetModerationQeueItemProcessed(item_id)
-    local reqString = string.format("/queue/moderation/processed?key=%s&id=", key, item_id)
+    local reqString = string.format("/game/queue/moderation/processed?key=%s&id=", key, item_id)
     server.httpGet(moderation_port, reqString)
 end
 
 function ModerationHttpResponse(port, request, reply)
     if port ~= moderation_port then return end
-    if string.match(request, "^/ban%?steam_id.+") then
+    if string.match(request, "^/game/ban%?steam_id.+") then
         local qparams = parseurl(request)
         local data = json.parse(reply)
         if data.error then
@@ -136,7 +136,7 @@ function ModerationHttpResponse(port, request, reply)
         return
     end
 
-    if string.match(request, "^/player%?steam_id.+") then
+    if string.match(request, "^/game/player%?steam_id.+") then
         local data = json.parse(reply)
         local qparams = parseurl(request)
         if data.error then
@@ -163,7 +163,7 @@ function ModerationHttpResponse(port, request, reply)
         end
     end
 
-    if string.match(request, "^/queue/moderation%?key.+") then
+    if string.match(request, "^/game/queue/moderation%?key.+") then
         local data = json.parse(reply)
         debug.log("[DEBUG] ModerationHttpResponse.queue: "..reply)
         if data.error then
