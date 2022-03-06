@@ -1,3 +1,7 @@
+require("util.url")
+-- IMPORTANT: Replace this value with your actual API key
+key = urlencode("potato")
+
 require("base")
 require("tracking.player_tracking")
 require("tracking.vehicle_tracking")
@@ -14,9 +18,7 @@ require("management.moderation")
 require("management.radiation_clean")
 require("management.antiobjectspam")
 require("management.dashboard")
-
--- IMPORTANT: Replace this value with your actual API key
-key = "potato"
+require("util.commands")
 
 -- Module order defines execution order. Put dependancies first.
 -- Module key must match playlist xml name in playlist_xml folder (if zones or vehicles are needed for the module)
@@ -38,7 +40,8 @@ modules={
     {moderation=Moderation},
     {radiation_clean=RadiationClean},
     {antiobjectspam=AntiObjectSpam},
-    {dashboard=Dashboard}
+    {dashboard=Dashboard},
+    {commands=Commands}
 }
 
 function onCreate(is_world_create)
