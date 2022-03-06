@@ -4,10 +4,9 @@ require("tracking.player_tracking")
 require("util.json")
 require("util.url")
 require("util.help")
+require("util.notify")
 
 moderation_port = 3002
--- IMPORTANT: Replace this value with your actual API key
-key = "potato"
 queue_check_timer = 0
 
 function Moderation()
@@ -63,7 +62,7 @@ function ModerationCommands(full_message, user_peer_id, is_admin, is_auth, comma
     end
 
     if command == "?deauth" then
-        
+        server.announce("[MODERATION]", "Not implmented", user_peer_id)
     end
 end
 
@@ -119,6 +118,11 @@ function ModerationHttpResponse(port, request, reply)
     if string.match(request, "^/game/ban%?steam_id.+") then
         local qparams = parseurl(request)
         local data = json.parse(reply)
+        if not data then
+            messageAdmins("[MODERATION]", "Bad response from API: "..reply)
+			debug.log("[DEBUG] ERROR: Bad response from API: "..reply)
+			return
+		end
         if data.error then
             if qparams.issuer then
                 local issuer = GetPlayerBySteamId(qparams.issuer)
@@ -139,6 +143,11 @@ function ModerationHttpResponse(port, request, reply)
     if string.match(request, "^/game/player%?steam_id.+") then
         local data = json.parse(reply)
         local qparams = parseurl(request)
+        if not data then 
+            messageAdmins("[MODERATION]", "Bad response from API: "..reply)
+			debug.log("[DEBUG] ERROR: Bad response from API: "..reply)
+			return 
+		end
         if data.error then
             if data.error.statusCode == 404 then
                 local player = GetPlayerBySteamId(qparams.steam_id)
@@ -165,7 +174,11 @@ function ModerationHttpResponse(port, request, reply)
 
     if string.match(request, "^/game/queue/moderation%?key.+") then
         local data = json.parse(reply)
-        debug.log("[DEBUG] ModerationHttpResponse.queue: "..reply)
+        if not data then 
+            messageAdmins("[MODERATION]", "Bad response from API: "..reply)
+			debug.log("[DEBUG] ERROR: Bad response from API: "..reply)
+			return 
+		end
         if data.error then
             return
         end

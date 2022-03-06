@@ -8,3 +8,13 @@ function notifyAdmins(title, message)
         end
     end
 end
+
+---@param from string
+---@param message string
+function messageAdmins(from, message)
+    for i, player in ipairs(server.getPlayers()) do
+        if player.admin then
+            server.announce(from, message, player.id)
+        end
+    end
+end
