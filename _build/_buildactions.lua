@@ -171,25 +171,25 @@ function onLBBuildComplete(builder, params, workspaceRoot)
 
     -- Package intermediate
     print("[INFO] packaging addon")
-    fsutil.removeDirectory("out/_intermediate/packaged")
-    fsutil.createDirectory("out/_intermediate/packaged")
-    fsutil.copy("out/_intermediate/script.lua", "out/_intermediate/packaged")
-    writeXMLFile("out/_intermediate/packaged/playlist.xml", playlist_base)
+    fsutil.removeDirectory("_build/out/_intermediate/packaged")
+    fsutil.createDirectory("_build/out/_intermediate/packaged")
+    fsutil.copy("_build/out/_intermediate/script.lua", "_build/out/_intermediate/packaged")
+    writeXMLFile("_build/out/_intermediate/packaged/playlist.xml", playlist_base)
 
     -- Package release
-    fsutil.removeDirectory("out/release/packaged")
-    fsutil.createDirectory("out/release/packaged")
-    fsutil.copy("out/release/script.lua", "out/release/packaged")
-    writeXMLFile("out/release/packaged/playlist.xml", playlist_base)
+    fsutil.removeDirectory("_build/out/release/packaged")
+    fsutil.createDirectory("_build/out/release/packaged")
+    fsutil.copy("_build/out/release/script.lua", "_build/out/release/packaged")
+    writeXMLFile("_build/out/release/packaged/playlist.xml", playlist_base)
 
     -- Package vehicles
     for idx, filename in ipairs(vehicles) do
         -- _intermediate
-        fsutil.copy(string.format("vehicle_xml/%s", filename), "out/_intermediate/packaged/")
-        fsutil.rename(string.format("out/_intermediate/packaged/%s", filename), string.format("vehicle_%d.xml", idx))
+        fsutil.copy(string.format("vehicle_xml/%s", filename), "_build/out/_intermediate/packaged/")
+        fsutil.rename(string.format("_build/out/_intermediate/packaged/%s", filename), string.format("vehicle_%d.xml", idx))
         -- release
-        fsutil.copy(string.format("vehicle_xml/%s", filename), "out/release/packaged/")
-        fsutil.rename(string.format("out/release/packaged/%s", filename), string.format("vehicle_%d.xml", idx))
+        fsutil.copy(string.format("vehicle_xml/%s", filename), "_build/out/release/packaged/")
+        fsutil.rename(string.format("_build/out/release/packaged/%s", filename), string.format("vehicle_%d.xml", idx))
     end
 
     -- print(inspect.inspect(playlist_base, {depth=10}))
@@ -199,6 +199,6 @@ function onLBBuildComplete(builder, params, workspaceRoot)
     print("Post build steps complete")
 
     print("Build Success")
-    print("See the /out/release/ folder for your minimized code")
+    print("See the _build/out/release/ folder for your minimized code")
 end
 

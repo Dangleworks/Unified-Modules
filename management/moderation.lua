@@ -6,6 +6,7 @@ require("util.url")
 require("util.help")
 require("util.notify")
 
+---@section Moderation
 moderation_port = 3002
 queue_check_timer = 0
 
@@ -66,14 +67,14 @@ function ModerationCommands(full_message, user_peer_id, is_admin, is_auth, comma
     end
 end
 
-function CheckModerationQueue(game_ticks)
-    queue_check_timer = queue_check_timer + 1
-    if queue_check_timer > 60 then
-        queue_check_timer = 0
-        local reqString = string.format("/game/queue/moderation?key=%s", key)
-        server.httpGet(moderation_port, reqString)
-    end
-end
+-- function CheckModerationQueue(game_ticks)
+--     queue_check_timer = queue_check_timer + 1
+--     if queue_check_timer > 60 then
+--         queue_check_timer = 0
+--         local reqString = string.format("/game/queue/moderation?key=%s", key)
+--         --server.httpGet(moderation_port, reqString)
+--     end
+-- end
 
 function CheckPlayerBanned(steam_id, name, peer_id, is_admin, is_auth)
     GetPlayerRequest(steam_id, true)
@@ -86,31 +87,31 @@ function GlobalBanPlayer(steam_id, temp, time, reason, issuer)
     else
         reqString = string.format("/game/ban?steam_id=%s&issuer=%s&permanent=true&reason=%s&key=%s", steam_id, issuer, urlencode(reason), key)
     end
-    server.httpGet(moderation_port, reqString)
+    --server.httpGet(moderation_port, reqString)
 end
 
 function UpdatePlayerRequest(steam_id, name)
     local reqString = string.format("/game/player/update?steam_id=%s&username=%s&key=%s", steam_id, urlencode(name), key)
-    server.httpGet(moderation_port, reqString)
+    --server.httpGet(moderation_port, reqString)
 end
 --- Submit request for player object from api
 ---@param steam_id string
 ---@param only_active_bans boolean
 function GetPlayerRequest(steam_id, only_active_bans)
     local reqString = string.format("/game/player?steam_id=%s&key=%s&only_active_bans=%s", steam_id, key, tostring(only_active_bans))
-    server.httpGet(moderation_port, reqString)
+    --server.httpGet(moderation_port, reqString)
 end
 
 function CreatePlayerRequest(steam_id, name)
     local reqString = string.format("/game/player/create?steam_id=%s&username=%s&key=%s", steam_id, urlencode(name), key)
-    server.httpGet(moderation_port, reqString)
+    --server.httpGet(moderation_port, reqString)
 end
 
 --- Sends HTTP request to mark the queue item as processed
 ---@param item_id number
 function SetModerationQeueItemProcessed(item_id)
     local reqString = string.format("/game/queue/moderation/processed?key=%s&id=", key, item_id)
-    server.httpGet(moderation_port, reqString)
+    --server.httpGet(moderation_port, reqString)
 end
 
 function ModerationHttpResponse(port, request, reply)
@@ -196,3 +197,4 @@ function ModerationHttpResponse(port, request, reply)
         end
     end
 end
+---@endsection

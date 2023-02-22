@@ -22,7 +22,7 @@ fsutil.copy = function(filepath, newpath)
         newpath = string.gsub(newpath, "/", "\\")
         os.execute(string.format('xcopy "%s" "%s"', filepath, newpath))
     else
-        os.execute(stirng.format('cp "%s" "%s"', filepath, newpath))
+        os.execute(string.format('cp "%s" "%s"', filepath, newpath))
     end
 end
 

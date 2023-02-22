@@ -1,6 +1,6 @@
 require("util.url")
 -- IMPORTANT: Replace this value with your actual API key
-key = urlencode("potato")
+key = urlencode("server")
 
 require("base")
 require("tracking.player_tracking")
@@ -16,8 +16,8 @@ require("util.help")
 require("management.autoauth")
 require("management.moderation")
 require("management.radiation_clean")
-require("management.antiobjectspam")
-require("management.dashboard")
+require("management.antiflare")
+require("management.daemon")
 require("util.commands")
 
 -- Module order defines execution order. Put dependancies first.
@@ -39,8 +39,8 @@ modules={
     {autoauth=AutoAuth},
     {moderation=Moderation},
     {radiation_clean=RadiationClean},
-    {antiobjectspam=AntiObjectSpam},
-    {dashboard=Dashboard},
+    {antiflare=AntiFlare},
+    {daemon=Daemon},
     {commands=Commands}
 }
 
@@ -62,6 +62,14 @@ function onTick(game_ticks)
     if hook_funcs[hooks.onTick] then
         for _, f in ipairs(hook_funcs[hooks.onTick]) do
             f(game_ticks)
+        end
+    end
+end
+
+function onChatMessage(user_peer_id, sender_name, message)
+    if hook_funcs[hooks.onChatMessage] then
+        for _, f in ipairs(hook_funcs[hooks.onChatMessage]) do
+            f(user_peer_id, sender_name, message)
         end
     end
 end

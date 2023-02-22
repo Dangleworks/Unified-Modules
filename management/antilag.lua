@@ -5,6 +5,7 @@ require("tracking.vehicle_tracking")
 require("tracking.player_tracking")
 require("util.debug")
 
+---@section AntiLag
 antilag_default_settings = {
     max_mass = 100000,
     tps_threshold = 45,
@@ -128,3 +129,4 @@ function AntilagOnVehicleLoad(vehicle_id)
 
     vehicle.antilag.spawn_time = server.getTimeMillisec()
 end
+---@endsection

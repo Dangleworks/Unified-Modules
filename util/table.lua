@@ -37,3 +37,12 @@ function TableMinKey(T)
 
     return min
 end
+
+function TableSlice(tbl, first, last)
+    last = last or #tbl
+    local sliced_table = {}
+  for i = first, last do
+    sliced_table[#sliced_table + 1] = tbl[i]
+  end
+  return sliced_table
+end
