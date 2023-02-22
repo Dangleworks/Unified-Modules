@@ -44,7 +44,9 @@ function AntiFlareTick(game_ticks)
                         end
 					end
                 end
-                notifyAdmins("Anti-Flare", string.format("Despawned %d flares", count))
+                if count > 0 then
+                    notifyAdmins("Anti-Flare", string.format("Despawned %d flares", count))
+                end
             end
             lastRefObjectId = oid
             server.despawnObject(oid, true)
