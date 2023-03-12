@@ -1,3 +1,5 @@
+--- URL encode a string
+---@param str string
 function urlencode(str)
   function cth(c) return string.format("%%%02X", string.byte(c)) end
   if str == nil then return "" end
@@ -6,6 +8,8 @@ function urlencode(str)
   return str
 end
 
+--- Decode a URL encoded string
+---@param str string
 function urldecode(s)
     s = s:gsub('+', ' '):gsub('%%(%x%x)', function(h) return string.char(tonumber(h, 16)) end)
     return s
