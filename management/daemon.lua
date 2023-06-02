@@ -1,12 +1,13 @@
 require("base")
 require("tracking.player_tracking")
+require("tracking.vehicle_tracking")
 require("util.json")
 require("util.url")
 require("util.notify")
 require("util.table")
 
 last_report_time = 0
-daemon_port = 3002
+daemon_port = 8080
 
 admins = {}
 mods = {}
@@ -63,12 +64,12 @@ function DaemonProcessCommand(full_message, user_peer_id, is_admin, is_auth, com
         local player = args[1]
         local reason = table.concat(TableSlice(args, 2), " ")
         server.httpGet(
-            daemon_port, 
+            daemon_port,
             string.format(
-                "/ban/add?key=%s&player=%s&submitter=%s&reason=%s", 
-                key, 
-                player, 
-                user_peer_id, 
+                "/ban/add?key=%s&player=%s&submitter=%s&reason=%s",
+                key,
+                player,
+                user_peer_id,
                 urlencode(reason)
             )
         )
@@ -126,11 +127,11 @@ function DaemonCheckin(game_ticks)
     if ctime - last_report_time >= 5000 then
         last_report_time = ctime
         local report = {}
-        report.players = server.getPlayers()
-        report.settings = server.getGameSettings()
+        --report.players = server.getPlayers()
+        --report.settings = server.getGameSettings()
         report.tps = tps
         report.tps_avg = tps_avg
-        report.vehicles = vehicle_list
+        --report.vehicles = vehicle_list
         report.uptime = ctime
         local data = urlencode(json.stringify(report))
         server.httpGet(daemon_port, string.format("/checkin?key=%s&data=%s", key, data))
