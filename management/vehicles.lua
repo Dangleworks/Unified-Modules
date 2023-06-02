@@ -56,7 +56,7 @@ function DespawnUserVehicle(vehicle_id, requester)
         server.notify(vehicle.peer_id, "Vehicle Management", "Your vehicle has been despawned by an admin", 1)
         server.notify(requester, "Vehicle Management", "Vehicle has been despawned", 9)
     else
-        server.notify(requester, "That vehicle does not belong to you", 1)
+        server.notify(requester, "Vehicle Management", "That vehicle does not belong to you", 1)
     end
 end
 

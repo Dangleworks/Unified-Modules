@@ -56,11 +56,11 @@ function DaemonProcessCommand(full_message, user_peer_id, is_admin, is_auth, com
         return
     end
     -- All commands after this point require admin
-    if is_admin == false then
-        server.announce("[ERROR]", "You must be an admin to use this command.", user_peer_id)
-        return
-    end
     if command == "?pban" then
+        if is_admin == false then
+            server.announce("[ERROR]", "You must be an admin to use this command.", user_peer_id)
+            return
+        end
         local player = args[1]
         local reason = table.concat(TableSlice(args, 2), " ")
         server.httpGet(
@@ -77,6 +77,10 @@ function DaemonProcessCommand(full_message, user_peer_id, is_admin, is_auth, com
     end
 
     if command == "?tban" then
+        if is_admin == false then
+            server.announce("[ERROR]", "You must be an admin to use this command.", user_peer_id)
+            return
+        end
         local player = args[1]
         local duration = args[2]
         local reason = table.concat(TableSlice(args, 3), " ")
@@ -95,6 +99,10 @@ function DaemonProcessCommand(full_message, user_peer_id, is_admin, is_auth, com
     end
 
     if command == "?warn" then
+        if is_admin == false then
+            server.announce("[ERROR]", "You must be an admin to use this command.", user_peer_id)
+            return
+        end
         local player = args[1]
         local reason = table.concat(TableSlice(args, 2), " ")
         server.httpGet(
