@@ -32,58 +32,57 @@ function VehicleManagementCommands(full_message, user_peer_id, is_admin, is_auth
         ClearUsersVehicles(targ_pid, user_peer_id)
     end
     if command == "?d" or command == "?despawn" then
-        local vehicle_id = tonumber(args[1])
-        if not vehicle_id then
+        local group_id = tonumber(args[1])
+        if not group_id then
             server.announce("[Error]", "Please provide a valid vehicle id", user_peer_id)
             return
         end
-        DespawnUserVehicle(vehicle_id, user_peer_id)
+        DespawnUserVehicle(group_id, user_peer_id)
     end
 end
 
-function DespawnUserVehicle(vehicle_id, requester)
-    local vehicle = GetUserVehicle(vehicle_id)
-    if vehicle == nil then
+function DespawnUserVehicle(group_id, requester)
+    local group_data = GetInternalVehicleGroupData(group_id)
+    if group_data == nil then
         server.notify(requester, "Vehicle Management", "Vehicle not found", 1)
         return
     end
 
-    if vehicle.peer_id == requester then
-        server.despawnVehicle(vehicle_id, true)
-        server.notify(requester, "Vehicle Management", "Your vehicle has been despawned", 9)
-    elseif requester == -1 or GetPlayerByPeerId(requester).is_admin then
-        server.despawnVehicle(vehicle_id, true)
-        server.notify(vehicle.peer_id, "Vehicle Management", "Your vehicle has been despawned by an admin", 1)
-        server.notify(requester, "Vehicle Management", "Vehicle has been despawned", 9)
-    else
-        server.notify(requester, "Vehicle Management", "That vehicle does not belong to you", 1)
+    if group_data.peer_id ~= requester and requester ~= -1 and not GetPlayerByPeerId(requester).is_admin then
+        server.notify(requester, "Vehicle Management", "That vehicle does not belong to you", NOTIFICATION_TYPE.FAILED_MISSION_CRITICAL)
+        return
+    end
+
+    local isOwner = group_data.peer_id == requester
+    
+    DespawnVehicleGroup(group_id)
+
+    server.notify(requester, "Vehicle Management", string.format("Vehicle %d has been despawned", group_id), NOTIFICATION_TYPE.COMPLETE_MISSION)
+    if not isOwner then
+        server.notify(group_data.peer_id, "Vehicle Management", "Your vehicle has been despawned by an admin", NOTIFICATION_TYPE.NETWORK_INFO)
     end
 end
 
 function ClearUsersVehicles(peer_id, requester)
-    local vehicles = GetUsersVehicles(peer_id)
-
-    if requester == peer_id then
-        DespawnVehicles(vehicles)
-        server.notify(peer_id, "Vehicle Management", "Your vehicles have been cleaned up", 9)
-    elseif requester == -1 or (GetPlayerByPeerId(requester) and GetPlayerByPeerId(requester).is_admin) then
-        local count = DespawnVehicles(vehicles)
-        server.notify(peer_id, "Vehicle Management", "Your vehicles have been cleaned up by an admin", 1)
-        -- don't notify requester if requester is server
-        if requester ~= -1 then
-            server.notify(requester, "Vehicle Management", string.format("Cleaned up %d vehicles", count), 1)
-        end
-    else
-        server.notify(peer_id, "Vehicle Management", "You do not have permission run this command", 1)
+    if peer_id ~= requester and requester ~= -1 and not GetPlayerByPeerId(requester).is_admin then
+        server.notify(requester, "Vehicle Management", "You do not have permission to run this command", NOTIFICATION_TYPE.FAILED_MISSION_CRITICAL)
+        return
     end
-end
+    
+    local group_data = GetAllInternalVehicleGroupDataForPeer(peer_id)
 
--- Takes a list of vehicles to despawn; vid:vehicle_data
-function DespawnVehicles(vehicles)
-    local count = 0
-    for vid, vehicle in pairs(vehicles) do
-        server.despawnVehicle(vid, true)
-        count = count + 1
+    if TableLength(group_data) == 0 then
+        server.notify(requester, "Vehicle Management", "You have no vehicles to clean up", NOTIFICATION_TYPE.COMPLETE_MISSION)
+        return
     end
-    return count
+
+    for id, _ in pairs(group_data) do
+        DespawnVehicleGroup(id)
+    end
+
+    server.notify(requester, "Vehicle Management", string.format("Cleaned up %d vehicles", TableLength(group_data)), NOTIFICATION_TYPE.COMPLETE_MISSION)
+
+    if peer_id ~= requester then
+        server.notify(peer_id, "Vehicle Management", "Your vehicles have been cleaned up by an admin", NOTIFICATION_TYPE.NETWORK_INFO)
+    end
 end

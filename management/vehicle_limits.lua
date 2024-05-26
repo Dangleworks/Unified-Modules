@@ -14,7 +14,7 @@ vehicle_limits_default_settings = {
 function VehicleLimits()
     AddHook(hooks.onCreate, SetupVehicleLimits)
     AddHook(hooks.onPlayerJoin, SetBaseVehicleLimit)
-    AddHook(hooks.onVehicleSpawn, CheckVehicleLimit)
+    AddHook(hooks.onGroupSpawn, CheckVehicleLimit)
     AddHook(hooks.onTick, UpdateVehicleCountPopup)
 end
 
@@ -24,7 +24,7 @@ function SetupVehicleLimits(is_create)
         g_savedata.vehicle_limits = vehicle_limits_default_settings
     end
 
-    for idx, player in pairs(server.getPlayers()) do
+    for _, player in pairs(server.getPlayers()) do
         SetBaseVehicleLimit(player.steam_id, player.name, player.id, player.admin, player.auth)
     end
 end
@@ -34,54 +34,57 @@ function SetBaseVehicleLimit(steam_id, name, peer_id, is_admin, is_auth)
     GetPlayerByPeerId(peer_id).vehicle_limit = g_savedata.vehicle_limits.base_vehicle_limit
 end
 
-function CheckVehicleLimit(vehicle_id, peer_id, x, y, z, cost)    
-    -- Vehicle limit logic
-    local cur_vehicles = GetUsersVehicles(peer_id)
-    local num_vehicles = TableLength(cur_vehicles)
+function CheckVehicleLimit(group_id, peer_id, x, y, z, cost)
+    local group_data = GetAllInternalVehicleGroupDataForPeer(peer_id)
+    local num_vehicles = TableLength(group_data)
     local player = GetPlayerByPeerId(peer_id)
 
     if not player then return end
 
-    if num_vehicles > player.vehicle_limit then
-        local bypass = false
-        if (player.is_admin and g_savedata.vehicle_limits.admin_bypass_vehicle_limit) or g_savedata.vehicle_limits.disable_vehicle_limit then
-            bypass = true
-        end
+    local bypass = (player.is_admin and g_savedata.vehicle_limits.admin_bypass_vehicle_limit) or
+    g_savedata.vehicle_limits.disable_vehicle_limit
+    if bypass then return end
 
-        if not bypass then
-            if g_savedata.vehicle_limits.auto_despawn_vehicle_limit then
-                -- TODO: does this break if vehicle limit = 1?
-                local oldest = TableMinKey(cur_vehicles)
-                server.notify(peer_id, "Vehicle Limit", string.format("Vehicle %d has been despawned to allow %d to spawn", oldest, vehicle_id), 6)
-                server.despawnVehicle(oldest, true)
-            else
-                server.despawnVehicle(vehicle_id, true)
-                server.notify(peer_id, "Vehicle Limit", string.format("You have reached your maxmimum spawned vehicle limit of %d", player.vehicle_limit), 6)
-                return
-            end
+    if num_vehicles > player.vehicle_limit then
+        if g_savedata.vehicle_limits.auto_despawn_vehicle_limit then
+            --- @type InternalGroupData
+            local oldest = group_data[TableMinKey(group_data)]
+            server.notify(peer_id, "Vehicle Limit",
+                string.format("Vehicle %d has been despawned to allow %d to spawn", oldest.group_id, group_id), 6)
+            server.despawnVehicleGroup(oldest.group_id, true)
+        else
+            server.despawnVehicleGroup(group_id, true)
+            server.notify(peer_id, "Vehicle Limit",
+                string.format("You have reached your maxmimum spawned vehicle limit of %d", player.vehicle_limit), 6)
+            return
         end
     end
 end
 
 function UpdateVehicleCountPopup(ticks)
-        vpop_delay = vpop_delay + 1
-        if vpop_delay > 60 then
-            vpop_delay = 0
-            for pid, player in pairs(player_list) do
-                if not server.getPlayerName(pid) then
-                    debug.log("[DEBUG] UpdateVehicleCountPopup - tracked player not found in server")
-                else
-                    local vlimit = player.vehicle_limit
-                    local vehicles = GetUsersVehicles(pid)
-                    local vcount = TableLength(vehicles)
-                    if g_savedata.antilag.disable_vehicle_limit then
-                        server.setPopupScreen(player.peer_id, vehicle_uiid, "Vehicles", true, string.format("Vehicles: %d", vcount), 0.4, 0.88)
-                    else
-                        server.setPopupScreen(player.peer_id, vehicle_uiid, "Vehicles", true, string.format("Vehicles: %d/%d", vcount, vlimit), 0.4, 0.88)
-                    end
-                end
+    vpop_delay = vpop_delay + 1
+    if vpop_delay > 60 then
+        vpop_delay = 0
+        for peer_id, player in pairs(player_list) do
+            if not server.getPlayerName(peer_id) then
+                debug.log("[DEBUG] UpdateVehicleCountPopup - could not find player name for peer_id: " .. peer_id)
+                goto continue
             end
+
+            local vehicle_limit = player.vehicle_limit
+            local group_data = GetAllInternalVehicleGroupDataForPeer(player.peer_id)
+            local vehicle_count = TableLength(group_data)
+            if g_savedata.vehicle_limits.disable_vehicle_limit then
+                server.setPopupScreen(player.peer_id, vehicle_uiid, "Vehicles", true,
+                string.format("Vehicles: %d", vehicle_count), 0.4, 0.88)
+            else
+                server.setPopupScreen(player.peer_id, vehicle_uiid, "Vehicles", true,
+                string.format("Vehicles: %d/%d", vehicle_count, vehicle_limit), 0.4, 0.88)
+            end
+            
+            ::continue::
         end
+    end
 end
 
 -- TODO: Get vehicle limits from web service

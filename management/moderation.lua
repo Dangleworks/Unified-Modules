@@ -14,7 +14,7 @@ function Moderation()
     AddHook(hooks.onCustomCommand, ModerationCommands)
     AddHook(hooks.onPlayerJoin, CheckPlayerBanned)
     AddHook(hooks.httpReply, ModerationHttpResponse)
-    AddHook(hooks.onTick, CheckModerationQueue)
+    --AddHook(hooks.onTick, CheckModerationQueue)
     AddHelpEntry("moderation", {
         {"?gban peer_id [[temp] time] [reason]", "Temp ban player - ex: ?gban 4 temp 5h Spamming and trolling", true},
         {"?gban peer_id [reason]", "Permanently ban player - ex: ?gban 4 Spawning lag bombs", true},
@@ -31,6 +31,11 @@ function ModerationCommands(full_message, user_peer_id, is_admin, is_auth, comma
     end
     local peer_id = tonumber(args[1])
     if command == "?gban" then
+        if not peer_id then
+            server.announce("[MODERATION]", "Invalid peer id", user_peer_id)
+            return
+        end
+        
         local player = GetPlayerByPeerId(peer_id)
         if not player then
             server.announce("[MODERATION]", "Player not found", user_peer_id)

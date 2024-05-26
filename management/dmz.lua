@@ -83,7 +83,7 @@ function ProcessZones(game_ticks)
 
     for vid, vehicle in pairs(vehicle_list) do
         local in_zone = false
-        local vpos, ok = server.getVehiclePos(vid)
+        local vpos, ok = server.getVehiclePos(vid,0,0,0)
         if ok then
             for _, zone in pairs(dmz_zones) do
                if matrix.distance(vpos, zone.transform) < g_savedata.dmz.radius then

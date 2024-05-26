@@ -2,67 +2,93 @@
 require("base")
 require("util.debug")
 
+vehicle_group_list = {}
 vehicle_list = {}
 
 function VehicleTracking()
-    AddHook(hooks.onVehicleLoad, TrackVehicleLoaded)
+    AddHook(hooks.onGroupSpawn, TrackVehicleGroup)
     AddHook(hooks.onVehicleSpawn, TrackVehicle)
     AddHook(hooks.onVehicleDespawn, UntrackVehicle)
+    AddHook(hooks.onVehicleLoad, TrackVehicleLoad)
 end
 
-function TrackVehicle(vehicle_id, peer_id, x, y, z, cost)
+function TrackVehicleGroup(group_id, peer_id, x, y, z, cost)
     if peer_id == -1 then return end
+
+    if vehicle_group_list[group_id] ~= nil then return end
     
-    vehicle_list[vehicle_id] = {
+    vehicle_group_list[group_id] = {
+       group_id=group_id,
        peer_id=peer_id,
        spawn_coords={x=x,y=y,z=z},
        cost=cost,
-       loaded=false,
-       mass=0,
-       voxels=0,
-       filename="not loaded"
+       loaded=false
    }
 end
 
-function TrackVehicleLoaded(vehicle_id)
-    if vehicle_list[vehicle_id] ~= nil then
-        vd, ok = server.getVehicleData(vehicle_id)
-        if ok then
-            vehicle_list[vehicle_id].loaded = true
-            vehicle_list[vehicle_id].mass = vd.mass
-            vehicle_list[vehicle_id].voxels = vd.voxels
-            vehicle_list[vehicle_id].filename = vd.filename
-        end
-    end
+-- Track the group for each vehicle
+function TrackVehicle(vehicle_id, peer_id, x, y, z, group_cost, group_id)
+    if peer_id == -1 then return end
+    if vehicle_list[vehicle_id] ~= nil then return end
+
+    vehicle_list[vehicle_id] = group_id
+end
+
+function TrackVehicleLoad(vehicle_id)
+    local group_data = GetInternalVehicleGroupDataByVehicleId(vehicle_id)
+    if group_data == nil then return end
+    group_data.loaded = true
 end
 
 function UntrackVehicle(vehicle_id)
+    if vehicle_list[vehicle_id] == nil then return end
+
+    group_id = vehicle_list[vehicle_id]
+    vehicles, ok = server.getVehicleGroup(group_id)
     vehicle_list[vehicle_id] = nil
+
+    if not ok then return end
+
+    -- Untrack the group if there are no more vehicles in it
+    if #vehicles == 0 then
+        vehicle_group_list[group_id] = nil
+    end
 end
 
-function GetUsersVehicles(peer_id)
-    local vehicles = {}
-    for vid, vehicle in pairs(vehicle_list) do
-        if vehicle.peer_id == peer_id then
-            vehicles[vid] = vehicle
+function GetInternalVehicleGroupData(group_id)
+    return vehicle_group_list[group_id]
+end
+
+function GetInternalVehicleGroupDataByVehicleId(vehicle_id)
+    return GetInternalVehicleGroupData(vehicle_list[vehicle_id])
+end
+
+--- Get all vehicle group data entries for a specific peer
+--- @param peer_id number The peer ID to search for
+--- @return group_data table A table of vehicle group data entries indexed by group ID
+function GetAllInternalVehicleGroupDataForPeer(peer_id)
+    local group_data = {}
+    for group_id, data in pairs(vehicle_group_list) do
+        if data.peer_id == peer_id then
+            group_data[group_id] = data
         end
     end
 
-    return vehicles
+    return group_data
 end
 
---- Get user vehicle from vehicle id
----@param vehicle_id number
----@return Vehicle
-function GetUserVehicle(vehicle_id)
-    return vehicle_list[vehicle_id]
+function DespawnVehicleGroup(group_id)
+    ok = server.despawnVehicleGroup(group_id, true)
+    if not ok then return end
+
+    vehicle_group_list[group_id] = nil
 end
 
 function VehicleTrackingCommands(full_message, user_peer_id, is_admin, is_auth, command, args)
     command = string.lower(command)
     if is_admin and (command == "?vehiclelist" or command == "?vl") then
         if #args == 0 then
-            for vid, vehicle in pairs(vehicle_list) do
+            for vid, vehicle in pairs(vehicle_group_list) do
                 server.announce("[VEHICLE LIST]", string.format("%d: %s - %d", vid, vehicle.filename, vehicle.peer_id), user_peer_id)
             end
         else
@@ -75,11 +101,11 @@ function VehicleTrackingCommands(full_message, user_peer_id, is_admin, is_auth, 
                 end
             end
 
-            for vid, vehicle in pairs(vehicle_list) do
+            for vid, vehicle in pairs(vehicle_group_list) do
                 local data = string.format("%d ", vid)
                 for _, field in ipairs(selected_fields) do
                     if field == "position" then
-                        local pos, ok = server.getVehiclePos(vid)
+                        local pos, ok = server.getVehiclePos(vid,0,0,0)
                         if ok then
                             local x,y,z = matrix.position(pos)    
                             data = data..string.format("| X%.1f,Y%.1f,Z%.1f", x,y,z)
@@ -99,11 +125,11 @@ function VehicleTrackingCommands(full_message, user_peer_id, is_admin, is_auth, 
 
     if is_admin and command == "?vehicle" and args[1] and tonumber(args[1]) then
         local vid = tonumber[args[1]]
-        local vehicle = GetUserVehicle(vid)
-        if not vehicle then
-            server.announce("[VEHICLE DATA]", "Vehicle not found", user_peer_id)
+        local data, ok = server.getVehicleData(vid)
+        if not ok then
+            server.announce("[VEHICLE DATA]", "Could not get data for that vehicle", user_peer_id)
             return
         end
-        server.announce("[VEHICLE DATA] "..args[1], debugutils.DumpTable(vehicle), user_peer_id)
+        server.announce("[VEHICLE DATA] "..args[1], debugutils.DumpTable(data), user_peer_id)
     end
 end

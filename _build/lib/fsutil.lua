@@ -20,7 +20,7 @@ fsutil.copy = function(filepath, newpath)
     if fsutil.isWindows() then
         filepath = string.gsub(filepath, "/", "\\")
         newpath = string.gsub(newpath, "/", "\\")
-        os.execute(string.format('xcopy "%s" "%s"', filepath, newpath))
+        os.execute(string.format('xcopy "%s" "%s" /Y', filepath, newpath))
     else
         os.execute(string.format('cp "%s" "%s"', filepath, newpath))
     end

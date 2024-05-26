@@ -4,12 +4,13 @@ require("util.table")
 require("tracking.vehicle_tracking")
 require("tracking.player_tracking")
 require("util.debug")
+require("util.notify")
 
 ---@section AntiLag
 antilag_default_settings = {
     max_mass = 100000,
     tps_threshold = 45,
-    load_time_threshold = 3000,
+    load_time_threshold = 8000,
     tps_recover_time = 4000,
     tps_avg_diff_threshold = 15,
     vehicle_stabilize_chances = 1
@@ -21,8 +22,7 @@ function AntiLag()
     AddHook(hooks.onCreate, AntilagOnCreate)
     AddHook(hooks.onTick, CalculateTPS)
     AddHook(hooks.onTick, AntilagOnTick)
-    AddHook(hooks.onVehicleSpawn, AntilagOnVehicleSpawn)
-    AddHook(hooks.onVehicleLoad, AntilagOnVehicleLoad)
+    AddHook(hooks.onGroupSpawn, AntilagOnVehicleGroupSpawn)
 end
 
 function AntilagOnCreate()
@@ -63,33 +63,36 @@ function AntilagOnTick(game_ticks)
         server.setGameSetting("vehicle_spawning", true)
     end
 
-    for vid, vehicle in pairs(vehicle_list) do
-        if vehicle.antilag then
-            local spawn_time = vehicle.antilag.spawn_time
+    for group_id, group_data in pairs(vehicle_group_list) do
+        if group_data.antilag then
+            local spawn_time = group_data.antilag.spawn_time
             local dtime = ctime - spawn_time
-            if not vehicle.loaded then
+            if not group_data.loaded then
                 if dtime > g_savedata.antilag.load_time_threshold then
-                    server.despawnVehicle(vid, true)
-                    server.notify(vehicle.peer_id, "Antilag", string.format("Your vehicle was despawned for exceeding the maxmimum load time of %.1f seconds.", g_savedata.antilag.load_time_threshold), 6)
+                    DespawnVehicleGroup(group_id)
+                    server.notify(group_data.peer_id, "Antilag", string.format("Your vehicle was despawned for exceeding the maxmimum load time of %.1f seconds.", g_savedata.antilag.load_time_threshold), 6)
                     -- todo: notify admins or log
+                    notifyAdmins("Antilag", string.format("Vehicle %d was despawned for exceeding the maxmimum load time of %.2f seconds. (%.2f)", group_id, g_savedata.antilag.load_time_threshold/1000, dtime/1000))
                 end
-            elseif not vehicle.antilag.cleared and dtime > g_savedata.antilag.tps_recover_time then
-                local avg_ok = (vehicle.antilag.spawn_tps_avg - tps_avg) < g_savedata.antilag.tps_avg_diff_threshold
-                local ins_ok = (vehicle.antilag.spawn_tps - tps) < g_savedata.antilag.tps_threshold
+            elseif not group_data.antilag.cleared and dtime > g_savedata.antilag.tps_recover_time then
+                local avg_ok = (group_data.antilag.spawn_tps_avg - tps_avg) < g_savedata.antilag.tps_avg_diff_threshold
+                local ins_ok = (group_data.antilag.spawn_tps - tps) < g_savedata.antilag.tps_threshold
 
-                if not avg_ok and ins_ok and vehicle.antilag.stabilize_count < g_savedata.antilag.vehicle_stabilize_chances then
-                    vehicle.antilag.spawn_time=ctime
-                    vehicle.antilag.stabilize_count = vehicle.antilag.stabilize_count + 1
+                if not avg_ok and ins_ok and group_data.antilag.stabilize_count < g_savedata.antilag.vehicle_stabilize_chances then
+                    group_data.antilag.spawn_time=ctime
+                    group_data.antilag.stabilize_count = group_data.antilag.stabilize_count + 1
                 elseif not avg_ok and not ins_ok then
-                    server.notify(vehicle.peer_id, "Antilag", string.format("Vehicle %d was despawned. Server FPS did not stabilize in time (%0.2f to %0.2f)", vid, vehicle.antilag.spawn_tps, tps), 6)
-                    server.despawnVehicle(vid, true)
+                    server.notify(group_data.peer_id, "Antilag", string.format("Vehicle %d was despawned. Server FPS did not stabilize in time (%0.2f to %0.2f)", group_id, group_data.antilag.spawn_tps, tps), 6)
+                    DespawnVehicleGroup(group_id)
+                    notifyAdmins("Antilag", string.format("Vehicle %d was despawned. Server FPS did not stabilize in time (%0.2f to %0.2f)", group_id, group_data.antilag.spawn_tps, tps))
                     -- todo: notifty admins or log
                 elseif not avg_ok and ins_ok then
-                    server.notify(vehicle.peer_id, "Antilag", string.format("Vehicle %d was despawned. Average FPS did not recover in time (%0.2f to %0.2f)", vid, vehicle.antilag.spawn_tps_avg, tps_avg), 6)
+                    server.notify(group_data.peer_id, "Antilag", string.format("Vehicle %d was despawned. Average FPS did not recover in time (%0.2f to %0.2f)", group_id, group_data.antilag.spawn_tps_avg, tps_avg), 6)
                     --todo: notify admins and log
-                    server.despawnVehicle(vid, true)
+                    DespawnVehicleGroup(group_id)
+                    notifyAdmins("Antilag", string.format("Vehicle %d was despawned. Average FPS did not recover in time (%0.2f to %0.2f)", group_id, group_data.antilag.spawn_tps_avg, tps_avg))
                 elseif avg_ok and ins_ok then
-                    vehicle.antilag.cleared = true
+                    group_data.antilag.cleared = true
                 end
             end
         else
@@ -98,35 +101,27 @@ function AntilagOnTick(game_ticks)
     end
 end
 
-function AntilagOnVehicleSpawn(vehicle_id, peer_id, x, y, z, cost)
+function AntilagOnVehicleGroupSpawn(group_id, peer_id, x, y, z, cost)
     if peer_id == -1 then return end
 
     if not spawning then
-        server.despawnVehicle(vehicle_id, true)
+        server.despawnVehicleGroup(group_id, true)
         server.notify(peer_id, "Antilag", "Vehicle spawning is temporarily disabled by antilag because server FPS is too low", 6)
         return
     end
 
-    -- do this instead of using cur_vehicles to make sure it's being set to the actual vehicle record
-    GetUserVehicle(vehicle_id).antilag = {
+    local internal_group_data = GetInternalVehicleGroupData(group_id)
+    if not internal_group_data then
+        notifyAdmins("Antilag Error", "Failed to get internal group data during a group spawn event")
+        return
+    end
+
+    internal_group_data.antilag = {
         spawn_time = server.getTimeMillisec(),
         spawn_tps = tps,
         spawn_tps_avg = tps_avg,
         cleared = false,
         stabilize_count = 0
     }
-end
-
-function AntilagOnVehicleLoad(vehicle_id)
-    local vehicle = GetUserVehicle(vehicle_id)
-    if not vehicle then return end
-    
-    if vehicle.mass >= g_savedata.antilag.max_mass then
-        server.despawnVehicle(vehicle_id, true)
-        server.notify(vehicle.peer_id, "Antilag", string.format("Your vehicle was despawned for being an absolute chonker (Weight Limit: %d)", g_savedata.antilag.max_mass), 6)
-        return
-    end
-
-    vehicle.antilag.spawn_time = server.getTimeMillisec()
 end
 ---@endsection

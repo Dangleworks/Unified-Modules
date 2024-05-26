@@ -134,15 +134,7 @@ function DaemonCheckin(game_ticks)
     local ctime = server.getTimeMillisec()
     if ctime - last_report_time >= 5000 then
         last_report_time = ctime
-        local report = {}
-        --report.players = server.getPlayers()
-        --report.settings = server.getGameSettings()
-        report.tps = tps
-        report.tps_avg = tps_avg
-        --report.vehicles = vehicle_list
-        report.uptime = ctime
-        local data = urlencode(json.stringify(report))
-        server.httpGet(daemon_port, string.format("/checkin?key=%s&data=%s", key, data))
+        server.httpGet(daemon_port, string.format("/checkin?key=%s&tps=%s&tps_avg=%s&uptime=%s", key, tps, tps_avg, ctime))
     end
 end
 
@@ -156,9 +148,9 @@ function DaemonCheckinReply(port, request, reply)
         return
     end
 
-    if data.action == "checkin" then
-        admins = data.admins
-        mods = data.moderators
-        return
-    end
+    -- if data.action == "checkin" then
+    --     admins = data.admins
+    --     mods = data.moderators
+    --     return
+    -- end
 end

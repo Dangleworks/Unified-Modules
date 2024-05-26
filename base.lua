@@ -25,7 +25,8 @@ hooks = {
     onForestFireExtinguished="onForestFireExtinguished",
     onButtonPress="onButtonPress",
     onObjectLoad="onObjectLoad",
-    onObjectUnload="onObjectUnload"
+    onObjectUnload="onObjectUnload",
+    onGroupSpawn="onGroupSpawn"
 }
 
 hook_funcs = {}

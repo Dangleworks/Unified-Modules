@@ -90,10 +90,18 @@ function onPlayerLeave(steam_id, name, peer_id, is_admin, is_auth)
     end
 end
 
-function onVehicleSpawn(vehicle_id, peer_id, x, y, z, cost)
+function onVehicleSpawn(vehicle_id, peer_id, x, y, z, group_cost, group_id)
     if hook_funcs[hooks.onVehicleSpawn] then
         for _, f in ipairs(hook_funcs[hooks.onVehicleSpawn]) do
-            f(vehicle_id, peer_id, x, y, z, cost)
+            f(vehicle_id, peer_id, x, y, z, group_cost, group_id)
+        end
+    end
+end
+
+function onGroupSpawn(group_id, peer_id, x, y, z, group_cost)
+    if hook_funcs[hooks.onGroupSpawn] then
+        for _, f in ipairs(hook_funcs[hooks.onGroupSpawn]) do
+            f(group_id, peer_id, x, y, z, group_cost)
         end
     end
 end

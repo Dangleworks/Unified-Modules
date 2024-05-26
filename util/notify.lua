@@ -18,3 +18,18 @@ function messageAdmins(from, message)
         end
     end
 end
+
+NOTIFICATION_TYPE = {
+    NEW_MISSION = 0,
+    NEW_MISSION_CRITICAL = 1,
+    FAILED_MISSION = 2,
+    FAILED_MISSION_CRITICAL = 3,
+    COMPLETE_MISSION = 4,
+    NETWORK_CONNECT = 5,
+    NETWORK_DISCONNECT = 6,
+    NETWORK_INFO = 7,
+    CHAT_MESSAGE = 8,
+    REWARDS = 9,
+    NETWORK_INFO_CRITICAL = 10,
+    RESEARCH_COMPLETE = 11
+}

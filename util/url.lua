@@ -9,7 +9,7 @@ function urlencode(str)
 end
 
 --- Decode a URL encoded string
----@param str string
+---@param s string
 function urldecode(s)
     s = s:gsub('+', ' '):gsub('%%(%x%x)', function(h) return string.char(tonumber(h, 16)) end)
     return s

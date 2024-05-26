@@ -200,5 +200,8 @@ function onLBBuildComplete(builder, params, workspaceRoot)
 
     print("Build Success")
     print("See the _build/out/release/ folder for your minimized code")
+
+    -- Copy packaged files to the addon folder
+    fsutil.copy("_build/out/release/packaged/*", "C:/Users/Alan/AppData/Roaming/Stormworks/data/missions/UnifiedModules/")
 end
 
